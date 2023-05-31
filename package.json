@@ -1,0 +1,20 @@
+{
+  "name": "nz-plugin",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build-admin": "vite build -c vite.config-admin.js",
+    "build-plugin": "vite build -c vite.config-plugin.js"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^2.0.3",
+    "@tsconfig/svelte": "^4.0.1",
+    "svelte": "^3.57.0",
+    "svelte-carousel": "^1.0.25",
+    "svelte-check": "^2.10.3",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2"
+  }
+}

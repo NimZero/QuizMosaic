@@ -1,0 +1,43 @@
+.nz-quizmosaic--admin-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0 1rem 0;
+}
+
+.nz-quizmosaic--admin-addBtn {
+    height: 2.5rem;
+    width: 2.5rem;
+    border-radius: 100%;
+    border: gray solid 1px;
+    font-size: 2rem;
+    font-family: revert;
+    color: gray;
+    cursor: pointer;
+}
+
+.nz-quizmosaic--admin-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-left: 2rem;
+}
+
+.nz-quizmosaic--admin-gap-2 {
+    gap: 2rem;
+}
+
+.nz-quizmosaic--admin-mt {
+    margin-top: 1rem;
+}
+
+.nz-quizmosaic--admin-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.nz-quizmosaic--admin-btn {
+    font-family: revert;
+}
