@@ -2,7 +2,9 @@
 
 namespace Nimzero\QuizMosaic;
 
+use WP_Error;
 use WP_REST_Controller;
+use WP_REST_Response;
 use WP_REST_Server;
 use wpdb;
 
@@ -93,7 +95,7 @@ class RestAPIController extends WP_REST_Controller
         $survey = $wpdb->get_results(sprintf('SELECT S.name FROM %snz_quizmosaic_survey AS S WHERE S.id = %s;', $prefix, $id));
 
         if (count($survey) != 1) {
-            return rest_ensure_response([]);
+            return rest_ensure_response(new WP_REST_Response(['message' => 'Le quiz n\'a pas put être touvé.'], status: 404));
         }
 
         $data = [
@@ -205,11 +207,89 @@ class RestAPIController extends WP_REST_Controller
     public function update_item($request)
     {
         // Mettez à jour l'élément avec les nouvelles données fournies dans la requête
-        $id   = $request->get_param('id');
+        $survey_id = $request->get_param('id');
         $data = $request->get_json_params();
-        // Effectuez les opérations nécessaires pour mettre à jour l'élément avec l'ID $id
+        $data = json_decode(stripcslashes($data['data']), true);
+        
+        $survey = [
+            'name' => $data['name'],
+        ];
 
-        return rest_ensure_response($data);
+        /** @var wpdb $wpdb */
+        global $wpdb;
+        $prefix = $wpdb->prefix;
+
+        $wpdb->query( 'START TRANSACTION' );
+
+        try {
+            $wpdb->update(sprintf('%snz_quizmosaic_survey', $prefix), $survey, ['id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_answer', $prefix), ['survey_id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_category', $prefix), ['survey_id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_question', $prefix), ['survey_id' => $survey_id]);
+
+            $categories = [];
+            foreach ($data['categories'] as $id => $text) {
+                $cat = [
+                    'survey_id' => $survey_id,
+                    'text' => $text,
+                ];
+
+                $wpdb->update(sprintf('%snz_quizmosaic_category', $prefix), $cat, ['id' => $id]);
+                $cat['id'] = $id;
+                $categories[] = $cat;
+            }
+
+            $categories = [];
+            foreach ($data['categories'] as $id => $text) {
+                $cat = [
+                    'id' => $id,
+                    'survey_id' => $survey_id,
+                    'text' => $text,
+                ];
+
+                $categories[] = $cat;
+                $wpdb->insert(sprintf('%snz_quizmosaic_category', $prefix), $cat);
+            }
+
+            $questions = [];
+            $answers = [];
+            foreach ($data['questions'] as $question) {
+                $quest = [
+                    'id' => $question['id'],
+                    'survey_id' => $survey_id,
+                    'question' => $question['question'],
+                ];
+
+                $questions[] = $quest;
+                $wpdb->insert(sprintf('%snz_quizmosaic_question', $prefix), $quest);
+
+                foreach ($question['answers'] as $answer) {
+                    $ans = [
+                        'survey_id' => $survey_id,
+                        'question_id' => $question['id'],
+                        'category_id' => $answer['category'],
+                        'text' => $answer['answer'],
+                    ];
+
+                    $answers[] = $ans;
+                    $wpdb->insert(sprintf('%snz_quizmosaic_answer', $prefix), $ans);
+                }
+            }
+
+            $wpdb->query( 'COMMIT' );
+
+            $survey['id'] = $survey_id;
+            $survey['questions'] = $questions;
+            $survey['categories'] = $categories;
+        }
+        catch (\Exception $e) {
+            $wpdb->query( 'ROLLBACK' );
+
+            // Gérer l'erreur
+            return new WP_Error( 'update_error', 'Une erreur s\'est produite lors de la mise à jour de l\'objet.' );
+        }
+
+        return rest_ensure_response(['message' => 'done', 'data' => $survey]);
     }
 
     /**
@@ -221,8 +301,27 @@ class RestAPIController extends WP_REST_Controller
     public function delete_item($request)
     {
         // Supprimez l'élément avec l'ID fourni dans la requête
-        $id = $request->get_param('id');
-        // Effectuez les opérations nécessaires pour supprimer l'élément avec l'ID $id
+        $survey_id = $request->get_param('id');
+
+        /** @var wpdb $wpdb */
+        global $wpdb;
+        $prefix = $wpdb->prefix;
+
+        $wpdb->query( 'START TRANSACTION' );
+
+        try {
+            $wpdb->delete(sprintf('%snz_quizmosaic_answer', $prefix), ['survey_id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_category', $prefix), ['survey_id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_question', $prefix), ['survey_id' => $survey_id]);
+            $wpdb->delete(sprintf('%snz_quizmosaic_survey', $prefix), ['id' => $survey_id]);
+            $wpdb->query( 'COMMIT' );
+        }
+        catch (\Exception $e) {
+            $wpdb->query( 'ROLLBACK' );
+
+            // Gérer l'erreur
+            return new WP_Error( 'update_error', 'Une erreur s\'est produite lors de la suppression de l\'objet.' );
+        }
 
         return rest_ensure_response(array('success' => true));
     }

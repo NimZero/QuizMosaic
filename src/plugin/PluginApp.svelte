@@ -28,6 +28,7 @@
         })
         .fail(function(response) {
             console.error('Une erreur s\'est produite lors de la récupération:', response.responseJSON);
+            throw new Error("error");
         });
 
         function trouverValeursPlusPresentes(tableau, attribut) {
@@ -108,7 +109,7 @@
 </script>
 
 {#await load}
-	<p>Chargement du questionnaire...</p>
+	<p class="message">Chargement du questionnaire...</p>
 {:then}
     <Carousel bind:this={carousel}>
         {#each questions as question}
@@ -127,5 +128,9 @@
         </div>
     </Carousel>
 {:catch error}
-	<p style="color: red">{error.message}</p>
+    {#await error.responseJSON then resp }
+    <div>
+        <p class="message error">{resp.message}</p>
+    </div>
+    {/await}
 {/await}

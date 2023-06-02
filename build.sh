@@ -3,8 +3,7 @@
 rm -r dist
 rm -r public
 
-mkdir -p public/js/
-mkdir -p public/css/
+mkdir -p public/js/ public/css
 
 yarn build-admin
 wait $!

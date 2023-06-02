@@ -1,40 +1,115 @@
 <script lang="ts">
+    var MyModel = wp.api.models.Post.extend({
+        url: function() {
+            return wpApiSettings.root + 'nz-quizmosaic/v1/survey/' + (this.get('id') ?? '');
+        },
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const survey = urlParams.get('survey');
     let categories = [];
     let questions = [];
+    let isEdit = false;
+
+    const load = async () => {
+        if (survey !== null && survey !== undefined && survey !== '') {
+            var myModel = new MyModel({ id: survey });
+
+            // Récupération d'un élément
+            await myModel.fetch()
+                .done(function() {
+                    let data = myModel.toJSON();
+                    surveyName = data['name'];
+                    isEdit = true;
+
+                    for (const [key, value] of Object.entries(data['categories'])) {
+                        categories = [...categories, {
+                            id: key,
+                            name: value,
+                        }];
+                    }
+
+                    data['questions'].forEach(question => {
+                        let ans = {};
+                        question['answers'].forEach(element => {
+                            ans[element.category] = element.answer;
+                        });
+
+                        questions = [...questions, {
+                            id: question['id'],
+                            question: question['question'],
+                            answers: ans,
+                        }];
+                    });
+                })
+                .fail(function(response) {
+                    console.error('Une erreur s\'est produite lors de la récupération:', response.responseJSON);
+                });
+        }
+    }
+
+    load();
+
     let json = null;
     let surveyName = '';
 
     const handleSubmit = (ev) => {
         let answers = {};
+        let quests = [];
 
         categories.forEach((element) => {
             answers[element.id] = element.name;
         });
 
+        questions.forEach((quest) => {
+            let tmp = {
+                id: quest.id,
+                question: quest.question,
+                answers: [],
+            };
+
+            for (const [key, value] of Object.entries(quest.answers)) {
+                tmp.answers.push({
+                    category: key,
+                    answer: value,
+                });
+            };
+
+            quests.push(tmp);
+        });
+
         let formatted = {
             name: surveyName,
-            questions: questions,
+            questions: quests,
             categories: answers,
         };
 
         json = JSON.stringify(formatted);
 
-        var MyModel = wp.api.models.Post.extend({
-            url: function() {
-                return wpApiSettings.root + 'nz-quizmosaic/v1/survey/' + (this.get('id') ?? '');
-            },
-        });
+        if (!isEdit) {
+            // Création d'un nouvel élément
+            var newModel = new MyModel();
+            newModel.save({ data: json })
+                .done(function() {
+                    let data = newModel.toJSON();
+                    alert('Created survey id: #'+data['data']['id']);
+                })
+                .fail(function(response) {
+                    console.error('Une erreur s\'est produite lors de la création:', response.responseJSON);
+                });
+        }
+        else {
+            var myModel = new MyModel({ id: survey });
 
-        // Création d'un nouvel élément
-        var newModel = new MyModel();
-        newModel.save({ data: json })
-            .done(function() {
-                let data = newModel.toJSON();
-                alert('Created survey id: #'+data['data']['id']);
-            })
-            .fail(function(response) {
-                console.error('Une erreur s\'est produite lors de la création:', response.responseJSON);
-            });
+            myModel.save({data: json})
+                .done(function() {
+                    let data = myModel.toJSON();
+                    alert('Modified survey id: #'+data['data']['id']);
+                })
+                .fail(function(response) {
+                    console.error('Une erreur s\'est produite lors de la mise à jour:', response.responseJSON);
+                });
+        }
     };
 
     const handleCategoriesAddClick = (ev) => {
@@ -102,20 +177,7 @@
             return obj.id == ev.target.dataset.questid;
         });
 
-        var answer = question.answers.find((obj) => {
-            return obj.category == ev.target.dataset.catid;
-        });
-
-        if (answer === undefined) {
-            answer = {
-                category: ev.target.dataset.catid,
-                answer: ev.target.value,
-            };
-
-            question.answers.push(answer);
-        } else {
-            answer.answer = ev.target.value;
-        }
+        question.answers[ev.target.dataset.catid] = ev.target.value;
     };
 
     const handleQuestionDeleteClick = (ev) => {
@@ -133,7 +195,7 @@
     <div class="nz-quizmosaic--admin-header">
         <span>Nom:</span>
         <input type="text" name="surveyName" bind:value="{surveyName}" required>
-        <button type="submit">créer</button>
+        <button type="submit">{#if isEdit}modifier{:else}créer{/if}</button>
     </div>
     <section>
         <div class="nz-quizmosaic--admin-header">

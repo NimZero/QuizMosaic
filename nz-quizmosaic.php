@@ -11,7 +11,7 @@
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
  * Description:       Description of the plugin.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            NimZero
@@ -176,6 +176,17 @@ class NZQuizMosaic
         );
 
         add_action('load-' . $hook2, [$this, 'queue_admin_assets']);
+
+        $hook3 = add_submenu_page(
+            'admin.php',
+            'Modify Quiz',
+            'Modifier',
+            'manage_options',
+            'nz_quizmosaic_modify',
+            [$this, 'admin_addmenu_html'],
+        );
+
+        add_action('load-' . $hook3, [$this, 'queue_admin_assets']);
     }
 }
 
