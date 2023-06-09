@@ -22,6 +22,10 @@
 }
 
 .nz-quizmosaic--questionModule {
+    swiper-slide {
+        height: auto !important;
+    }
+
     .sc-carousel__content-container {
         margin-bottom: 1rem !important;
     }
@@ -46,6 +50,7 @@
         justify-content: center !important;
         flex-direction: column !important;
         width: 100% !important;
+        height: 100% !important;
         margin-bottom: 1.5rem !important;
     }
 

@@ -11,7 +11,7 @@
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
  * Description:       Description of the plugin.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            NimZero
@@ -167,6 +167,35 @@ class NZQuizMosaic
         wp_enqueue_style('nz_quizmosaic-plugin');
     }
 
+
+    public function admin_page(): void
+    {
+        if (isset($_GET['delete'])) {
+            $survey_id = $_GET['delete'];
+
+            /** @var wpdb $wpdb */
+            global $wpdb;
+            $prefix = $wpdb->prefix;
+
+            $wpdb->query( 'START TRANSACTION' );
+
+            try {
+                $wpdb->delete(sprintf('%snz_quizmosaic_answer', $prefix), ['survey_id' => $survey_id]);
+                $wpdb->delete(sprintf('%snz_quizmosaic_category', $prefix), ['survey_id' => $survey_id]);
+                $wpdb->delete(sprintf('%snz_quizmosaic_question', $prefix), ['survey_id' => $survey_id]);
+                $wpdb->delete(sprintf('%snz_quizmosaic_survey', $prefix), ['id' => $survey_id]);
+                $wpdb->query( 'COMMIT' );
+            }
+            catch (\Exception $e) {
+                $wpdb->query( 'ROLLBACK' );
+            }
+        
+            // Redirigez l'utilisateur vers une autre page après la suppression
+            wp_safe_redirect(menu_page_url('nz_quizmosaic', false));
+            exit();
+        }
+    }
+
     public function options_page(): void
     {
         add_menu_page(
@@ -188,7 +217,7 @@ class NZQuizMosaic
             [$this, 'admin_managemenu_html'],
         );
 
-        // add_action('load-' . $hook1, [$this, 'queue_admin_assets']);
+        add_action('load-' . $hook1, [$this, 'admin_page']);
 
         $hook2 = add_submenu_page(
             'nz_quizmosaic',
