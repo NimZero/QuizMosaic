@@ -43,7 +43,7 @@ class RestAPIController extends WP_REST_Controller
             'methods'   => WP_REST_Server::CREATABLE,
             'callback'  => array($this, 'create_item'),
             'schema'    => array($this, 'get_item_schema'),
-            'permission_callback' => '__return_true',
+            'permission_callback' => [$this, 'check_admin_permission'],
         ));
 
         // Route pour la mise à jour d'un élément
@@ -57,7 +57,7 @@ class RestAPIController extends WP_REST_Controller
                     'required'    => true,
                 ),
             ),
-            'permission_callback' => '__return_true',
+            'permission_callback' => [$this, 'check_admin_permission'],
             'schema'    => array($this, 'get_item_schema'),
         ));
 
@@ -72,9 +72,23 @@ class RestAPIController extends WP_REST_Controller
                     'required'    => true,
                 ),
             ),
-            'permission_callback' => '__return_true',
+            'permission_callback' => [$this, 'check_admin_permission'],
             'schema'    => array($this, 'get_item_schema'),
         ));
+    }
+
+    /**
+     * Vérifie si l'utilisateur est administrateur.
+     *
+     * @param WP_REST_Request $request L'objet de requête de l'API REST.
+     * @return WP_Error|bool Un objet WP_Error si l'utilisateur n'est pas administrateur, sinon true.
+     */
+    function check_admin_permission( $request ) {
+        if ( ! current_user_can( 'administrator' ) ) {
+            return new WP_Error( 'rest_forbidden', 'Vous n\'êtes pas autorisé à effectuer cette action.', array( 'status' => 403 ) );
+        }
+    
+        return true;
     }
 
     /**
@@ -92,7 +106,7 @@ class RestAPIController extends WP_REST_Controller
         global $wpdb;
         $prefix = $wpdb->prefix;
 
-        $survey = $wpdb->get_results(sprintf('SELECT S.name FROM %snz_quizmosaic_survey AS S WHERE S.id = %s;', $prefix, $id));
+        $survey = $wpdb->get_results(sprintf('SELECT S.name, S.style FROM %snz_quizmosaic_survey AS S WHERE S.id = %s;', $prefix, $id));
 
         if (count($survey) != 1) {
             return rest_ensure_response(new WP_REST_Response(['message' => 'Le quiz n\'a pas put être touvé.'], status: 404));
@@ -102,6 +116,7 @@ class RestAPIController extends WP_REST_Controller
             'name' => $survey[0]->name,
             'questions' => [],
             'categories' => [],
+            'style' => $survey[0]->style,
         ];
 
         $categories = $wpdb->get_results(sprintf('SELECT C.id, C.text FROM %snz_quizmosaic_category AS C WHERE C.survey_id = %s;', $prefix, $id));
@@ -144,6 +159,7 @@ class RestAPIController extends WP_REST_Controller
         
         $survey = [
             'name' => $data['name'],
+            'style' => $data['style'],
         ];
 
         /** @var wpdb $wpdb */
@@ -213,6 +229,7 @@ class RestAPIController extends WP_REST_Controller
         
         $survey = [
             'name' => $data['name'],
+            'style' => $data['style'],
         ];
 
         /** @var wpdb $wpdb */

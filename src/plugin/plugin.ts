@@ -1,4 +1,4 @@
-import './plugin.css'
+import './plugin.scss'
 import PluginApp from './PluginApp.svelte'
 
 wp.api.loadPromise.done( function() {

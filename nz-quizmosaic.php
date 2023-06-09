@@ -11,7 +11,7 @@
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
  * Description:       Description of the plugin.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            NimZero
@@ -35,6 +35,7 @@ class NZQuizMosaic
         add_action('init', [$this, 'shortcodes_init']);
         add_action('rest_api_init', [$this, 'register_api']);
         add_action('admin_menu', [$this, 'options_page']);
+        add_action('plugins_loaded', [$this, 'check_update']);
     }
 
     public function activate(): void
@@ -46,7 +47,7 @@ class NZQuizMosaic
 
             $charset_collate = $wpdb->get_charset_collate();
 
-            dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_survey` (`id` int(11) NOT NULL AUTO_INCREMENT,`name` varchar(100) NOT NULL,PRIMARY KEY (`id`)) %s;', $wpdb->prefix, $charset_collate));
+            dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_survey` (`id` int(11) NOT NULL AUTO_INCREMENT,`name` varchar(100) NOT NULL, `style` TEXT NULL,PRIMARY KEY (`id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_question` (`id` int(11) NOT NULL,`survey_id` int(11) NOT NULL,`question` varchar(255) NOT NULL,PRIMARY KEY (`survey_id`,`id`),KEY `IDX_B6F7494EB3FE509D` (`survey_id`),KEY `IDX_DADD4A25B3FE509D` (`id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_category` (`id` int(11) NOT NULL,`survey_id` int(11) NOT NULL,`text` varchar(100) NOT NULL,PRIMARY KEY (`survey_id`,`id`),KEY `IDX_64C19C1B3FE509D` (`survey_id`),KEY `IDX_DADD4A2512469DE2` (`id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_answer` (`survey_id` int(11) NOT NULL,`question_id` int(11) NOT NULL,`category_id` int(11) NOT NULL,`text` varchar(100) NOT NULL,PRIMARY KEY (`survey_id`,`question_id`,`category_id`),KEY `IDX_75EA56E0FB7336F0` (`question_id`),KEY `IDX_75EA56E0E3BD61CE` (`category_id`)) %s;', $wpdb->prefix, $charset_collate));
@@ -54,12 +55,34 @@ class NZQuizMosaic
             dbDelta(sprintf('ALTER TABLE `%snz_quizmosaic_category` ADD CONSTRAINT `FK_64C19C1B3FE509D` FOREIGN KEY (`survey_id`) REFERENCES `nz_quizmosaic_survey` (`id`);', $wpdb->prefix));
             dbDelta(sprintf('ALTER TABLE `%snz_quizmosaic_answer` ADD CONSTRAINT `FK_DADD4A2512469DE2` FOREIGN KEY (`survey_id`) REFERENCES `%snz_quizmosaic_survey` (`id`), ADD CONSTRAINT `FK_DADD4A251E27F6BF` FOREIGN KEY (`question_id`) REFERENCES `%snz_quizmosaic_question` (`id`),ADD CONSTRAINT `FK_DADD4A25B3FE509D` FOREIGN KEY (`category_id`) REFERENCES `%snz_quizmosaic_category` (`id`);', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix));
 
-            add_option("nz_quizmosaic_db_version", "1.0");
+            add_option("nz_quizmosaic_db_version", "1.2");
         }
     }
 
     public function deactivate(): void
     {
+    }
+
+    public function check_update(): void
+    {
+        $currentVersion = get_option('nz_quizmosaic_db_version');
+
+        if ($currentVersion === '1.2') {
+            return;
+        }
+
+        /** @var wpdb $wpdb */
+        global $wpdb;
+
+        if ($currentVersion == '1.0') {
+
+            $table_name = $wpdb->prefix . 'nz_quizmosaic_survey';
+
+            // Exemple de mise à jour : ajouter une colonne à une table existante
+            $wpdb->query("ALTER TABLE $table_name ADD COLUMN style TEXT NULL");
+
+            update_option('nz_quizmosaic_db_version', '1.2');
+        }
     }
 
     public function register_api(): void
@@ -78,7 +101,7 @@ class NZQuizMosaic
         wp_register_style('nz_quizmosaic-plugin', plugins_url('/public/css/plugin.css', __FILE__), deps: [], ver: false, media: 'all');
 
         // Admin assets
-        wp_register_script('nz_quizmosaic-admin', plugins_url('/public/js/admin.js', __FILE__), deps: ['wp-api', 'backbone'], ver: false, in_footer: true);
+        wp_register_script('nz_quizmosaic-admin', plugins_url('/public/js/admin.js', __FILE__), deps: ['lodash', 'backbone', 'wp-api'], ver: false, in_footer: true);
         wp_register_style('nz_quizmosaic-admin', plugins_url('/public/css/admin.css', __FILE__), deps: [], ver: false, media: 'all');
     }
 
@@ -141,6 +164,7 @@ class NZQuizMosaic
     {
         wp_enqueue_script('nz_quizmosaic-admin');
         wp_enqueue_style('nz_quizmosaic-admin');
+        wp_enqueue_style('nz_quizmosaic-plugin');
     }
 
     public function options_page(): void

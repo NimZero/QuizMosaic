@@ -1,4 +1,4 @@
-import './admin.css'
+import './admin.scss'
 import AdminApp from './AdminApp.svelte'
 
 wp.api.loadPromise.done( function() {
