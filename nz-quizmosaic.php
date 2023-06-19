@@ -10,13 +10,13 @@
  * @wordpress-plugin
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
- * Description:       Description of the plugin.
- * Version:           1.2.1
+ * Description:       Créez des questionnaires interactifs avec catégories de réponses en toute simplicité.
+ * Version:           1.3.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            NimZero
  * Author URI:        https://nimzero.fr
- * Text Domain:       nz-plugin
+ * Text Domain:       nz-quizmosaic
  * License:           GPL v3 or later
  * License URI:       http://www.gnu.org/licenses/gpl-3.0.txt
  */

@@ -13,7 +13,6 @@ global $wpdb;
 $surveys = $wpdb->get_results(sprintf('SELECT * FROM %snz_quizmosaic_survey', $wpdb->prefix));
 $sub_menu_url = menu_page_url('nz_quizmosaic_modify', false);
 $menu_url = menu_page_url('nz_quizmosaic', false);
-
 ?>
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>

@@ -2,6 +2,7 @@
 
 namespace Nimzero\QuizMosaic;
 
+use Exception;
 use WP_Error;
 use WP_REST_Controller;
 use WP_REST_Response;
@@ -83,11 +84,12 @@ class RestAPIController extends WP_REST_Controller
      * @param WP_REST_Request $request L'objet de requête de l'API REST.
      * @return WP_Error|bool Un objet WP_Error si l'utilisateur n'est pas administrateur, sinon true.
      */
-    function check_admin_permission( $request ) {
-        if ( ! current_user_can( 'administrator' ) ) {
-            return new WP_Error( 'rest_forbidden', 'Vous n\'êtes pas autorisé à effectuer cette action.', array( 'status' => 403 ) );
+    function check_admin_permission($request)
+    {
+        if (!current_user_can('administrator')) {
+            return new WP_Error('rest_forbidden', 'Vous n\'êtes pas autorisé à effectuer cette action.', array('status' => 403));
         }
-    
+
         return true;
     }
 
@@ -156,7 +158,7 @@ class RestAPIController extends WP_REST_Controller
         // Créez un nouvel élément en utilisant les données fournies dans la requête
         $data = $request->get_json_params();
         $data = json_decode(stripcslashes($data['data']), true);
-        
+
         $survey = [
             'name' => $data['name'],
             'style' => $data['style'],
@@ -166,45 +168,56 @@ class RestAPIController extends WP_REST_Controller
         global $wpdb;
         $prefix = $wpdb->prefix;
 
-        $wpdb->insert(sprintf('%snz_quizmosaic_survey', $prefix), $survey);
+        $wpdb->query('START TRANSACTION');
 
-        $survey_id = $wpdb->insert_id;
+        try {
+            $wpdb->insert(sprintf('%snz_quizmosaic_survey', $prefix), $survey);
 
-        $categories = [];
-        foreach ($data['categories'] as $id => $text) {
-            $cat = [
-                'id' => $id,
-                'survey_id' => $survey_id,
-                'text' => $text,
-            ];
+            $survey_id = $wpdb->insert_id;
 
-            $categories[] = $cat;
-            $wpdb->insert(sprintf('%snz_quizmosaic_category', $prefix), $cat);
-        }
-
-        $questions = [];
-        $answers = [];
-        foreach ($data['questions'] as $question) {
-            $quest = [
-                'id' => $question['id'],
-                'survey_id' => $survey_id,
-                'question' => $question['question'],
-            ];
-
-            $questions[] = $quest;
-            $wpdb->insert(sprintf('%snz_quizmosaic_question', $prefix), $quest);
-
-            foreach ($question['answers'] as $answer) {
-                $ans = [
+            $categories = [];
+            foreach ($data['categories'] as $id => $text) {
+                $cat = [
+                    'id' => $id,
                     'survey_id' => $survey_id,
-                    'question_id' => $question['id'],
-                    'category_id' => $answer['category'],
-                    'text' => $answer['answer'],
+                    'text' => $text,
                 ];
 
-                $answers[] = $ans;
-                $wpdb->insert(sprintf('%snz_quizmosaic_answer', $prefix), $ans);
+                $categories[] = $cat;
+                $wpdb->insert(sprintf('%snz_quizmosaic_category', $prefix), $cat);
             }
+
+            $questions = [];
+            $answers = [];
+            foreach ($data['questions'] as $question) {
+                $quest = [
+                    'id' => $question['id'],
+                    'survey_id' => $survey_id,
+                    'question' => $question['question'],
+                ];
+
+                $questions[] = $quest;
+                $wpdb->insert(sprintf('%snz_quizmosaic_question', $prefix), $quest);
+
+                foreach ($question['answers'] as $answer) {
+                    $ans = [
+                        'survey_id' => $survey_id,
+                        'question_id' => $question['id'],
+                        'category_id' => $answer['category'],
+                        'text' => $answer['answer'],
+                    ];
+
+                    $answers[] = $ans;
+                    $wpdb->insert(sprintf('%snz_quizmosaic_answer', $prefix), $ans);
+                }
+            }
+
+            $wpdb->query('COMMIT');
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+
+            // Gérer l'erreur
+            return new WP_Error('update_error', 'Une erreur s\'est produite lors de la mise à jour de l\'objet.');
         }
 
         $survey['id'] = $survey_id;
@@ -226,7 +239,7 @@ class RestAPIController extends WP_REST_Controller
         $survey_id = $request->get_param('id');
         $data = $request->get_json_params();
         $data = json_decode(stripcslashes($data['data']), true);
-        
+
         $survey = [
             'name' => $data['name'],
             'style' => $data['style'],
@@ -236,7 +249,7 @@ class RestAPIController extends WP_REST_Controller
         global $wpdb;
         $prefix = $wpdb->prefix;
 
-        $wpdb->query( 'START TRANSACTION' );
+        $wpdb->query('START TRANSACTION');
 
         try {
             $wpdb->update(sprintf('%snz_quizmosaic_survey', $prefix), $survey, ['id' => $survey_id]);
@@ -293,17 +306,16 @@ class RestAPIController extends WP_REST_Controller
                 }
             }
 
-            $wpdb->query( 'COMMIT' );
+            $wpdb->query('COMMIT');
 
             $survey['id'] = $survey_id;
             $survey['questions'] = $questions;
             $survey['categories'] = $categories;
-        }
-        catch (\Exception $e) {
-            $wpdb->query( 'ROLLBACK' );
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
 
             // Gérer l'erreur
-            return new WP_Error( 'update_error', 'Une erreur s\'est produite lors de la mise à jour de l\'objet.' );
+            return new WP_Error('update_error', 'Une erreur s\'est produite lors de la mise à jour de l\'objet.');
         }
 
         return rest_ensure_response(['message' => 'done', 'data' => $survey]);
@@ -324,20 +336,19 @@ class RestAPIController extends WP_REST_Controller
         global $wpdb;
         $prefix = $wpdb->prefix;
 
-        $wpdb->query( 'START TRANSACTION' );
+        $wpdb->query('START TRANSACTION');
 
         try {
             $wpdb->delete(sprintf('%snz_quizmosaic_answer', $prefix), ['survey_id' => $survey_id]);
             $wpdb->delete(sprintf('%snz_quizmosaic_category', $prefix), ['survey_id' => $survey_id]);
             $wpdb->delete(sprintf('%snz_quizmosaic_question', $prefix), ['survey_id' => $survey_id]);
             $wpdb->delete(sprintf('%snz_quizmosaic_survey', $prefix), ['id' => $survey_id]);
-            $wpdb->query( 'COMMIT' );
-        }
-        catch (\Exception $e) {
-            $wpdb->query( 'ROLLBACK' );
+            $wpdb->query('COMMIT');
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
 
             // Gérer l'erreur
-            return new WP_Error( 'update_error', 'Une erreur s\'est produite lors de la suppression de l\'objet.' );
+            return new WP_Error('update_error', 'Une erreur s\'est produite lors de la suppression de l\'objet.');
         }
 
         return rest_ensure_response(array('success' => true));
@@ -402,5 +413,41 @@ class RestAPIController extends WP_REST_Controller
         );
 
         return $this->schema;
+    }
+
+    function prepareData($data)
+    {
+        if (!isset($data['name']) || !isset($data['style']) || !isset($data['questions']) || !isset($data['categories'])) {
+            throw new Exception("Missing data", 1);
+        }
+
+        $data['name'] = trim($data['name']);
+
+        if (strlen($data['name']) > 100) {
+            throw new Exception("The name attribute is too long", 1);
+        }
+
+        foreach ($data['categories'] as $id => $text) {
+            $data['categories'][$id] = trim($text);
+            if (strlen($data['categories'][$id]) > 100) {
+                throw new Exception(sprintf("The categorie id: #%s is too long", $id), 1);
+            }
+        }
+
+        foreach ($data['questions'] as $question) {
+            $question['question'] = trim($question['question']);
+            if (strlen($question['question']) > 255) {
+                throw new Exception(sprintf("The question id: #%s is too long", $question['id']), 1);
+            }
+
+            foreach ($question['answers'] as $answer) {
+                $answer['answer'] = trim($answer['answer']);
+                if (strlen($answer['answer']) > 100) {
+                    throw new Exception(sprintf("The answer for question id: #%s ands category #%s is too long", $question['id'], $answer['category']), 1);
+                }
+            }
+        }
+
+        return $data;
     }
 }

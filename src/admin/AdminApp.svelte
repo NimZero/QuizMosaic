@@ -1,5 +1,6 @@
 <script lang="ts">
     import { register } from 'swiper/element/bundle';
+    import HelpIcon from './HelpIcon.svelte';
     register();
 
     let carousel;
@@ -359,7 +360,7 @@
             {#each questions as question}
                 <swiper-slide>
                     <div class="col">
-                        <h5 class="question">{question.question}</h5>
+                        <h1 class="question">{question.question}</h1>
                         <div class="col gap">
                             {#each Object.entries(question.answers) as [cat, ans]}
                                 <button
@@ -394,21 +395,33 @@
                     <input
                         type="text"
                         name="surveyName"
+                        minlength="1"
+                        maxlength="100"
                         bind:value={surveyName}
                         required
                     />
                     <button type="submit"
                         >{#if isEdit}modifier{:else}créer{/if}</button
                     >
+                    <HelpIcon>
+                        <h1>Nom</h1>
+                        <p>Le nom n'est disponible que dans l'interface d'administration, et vous permet de facilement identifier vos questionnaires</p>
+                        <p>100 chars max</p>
+                    </HelpIcon>
                 </div>
                 <div>
                     <div class="nz-quizmosaic--admin-header">
-                        <h1>Categories</h1>
+                        <h1>Categories ({categories.length})</h1>
                         <button
                             type="button"
                             class="nz-quizmosaic--admin-addBtn"
                             on:click={handleCategoriesAddClick}>+</button
                         >
+                        <HelpIcon>
+                            <h1>Catégories</h1>
+                            <p>Les categories sont les résultats possible, il sont afficher séparer par une virgule puis par 'et'.</p>
+                            <p>100 chars max</p>
+                        </HelpIcon>
                     </div>
                     <div class="nz-quizmosaic--admin-container">
                         {#each categories as category (category.id)}
@@ -416,6 +429,8 @@
                                 <span>Nom:</span>
                                 <input
                                     type="text"
+                                    minlength="1"
+                                    maxlength="100"
                                     data-catId={category.id}
                                     value={category.name}
                                     required
@@ -432,12 +447,17 @@
                 </div>
                 <div>
                     <div class="nz-quizmosaic--admin-header">
-                        <h1>Questions</h1>
+                        <h1>Questions ({questions.length})</h1>
                         <button
                             type="button"
                             class="nz-quizmosaic--admin-addBtn"
                             on:click={handleQuestionsAddClick}>+</button
                         >
+                        <HelpIcon>
+                            <h1>Questions</h1>
+                            <p>help</p>
+                            <p>255 chars max pour la question et 100 max pour les réponses</p>
+                        </HelpIcon>
                     </div>
                     <div
                         class="nz-quizmosaic--admin-container nz-quizmosaic--admin-gap-2"
@@ -448,6 +468,8 @@
                                     <span>Question:</span>
                                     <input
                                         type="text"
+                                        minlength="1"
+                                        maxlength="255"
                                         data-questId={question.id}
                                         value={question.question}
                                         required
@@ -472,6 +494,8 @@
                                             >
                                             <input
                                                 type="text"
+                                                minlength="1"
+                                                maxlength="100"
                                                 data-questId={question.id}
                                                 data-catId={category.id}
                                                 value={question.answers[

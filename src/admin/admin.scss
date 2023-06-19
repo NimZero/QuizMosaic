@@ -1,4 +1,42 @@
 #app {
+    .container {
+        position: relative;
+    }
+
+    .help-icon {
+        border: #000 solid 1px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    .popover-container {
+        position: relative;
+    }
+
+    .popover {
+        position: absolute;
+        z-index: 9999;
+        border: #000 solid 1px;
+        border-radius: 0.5rem;
+        background: #fff;
+        padding: 5px;
+        top: 50%;
+        transform: translate(100%, -50%);
+        right: -50%;
+        width: max-content;
+    }
+
+    .popover::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 100%;
+        transform: translateY(-50%);
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: #000 solid 8px;
+    }
+
     .nz-quizmosaic--adminRow {
         display: grid;
         grid-template-columns: repeat(1, 1fr);
@@ -25,7 +63,7 @@
     
     .nz-quizmosaic--adminRow2 {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
     }
     
     .nz-quizmosaic--rowItem2 {
@@ -75,5 +113,9 @@
     
     .nz-quizmosaic--admin-btn {
         font-family: revert;
+    }
+
+    .nz-quizmosaic--questionModule {
+        margin-bottom: 5rem;
     }
 }

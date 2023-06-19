@@ -14,6 +14,6 @@ export default defineConfig({
         format: 'es',
       },
     },
-    minify: true,
+    minify: false,
   },
 })
