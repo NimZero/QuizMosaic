@@ -97,11 +97,11 @@ class NZQuizMosaic
     public function register_assets(): void
     {
         // Plugin assets
-        wp_register_script('nz_quizmosaic-plugin', plugins_url('/public/js/plugin.js', __FILE__), deps: ['wp-api', 'backbone'], ver: false, in_footer: true);
+        wp_register_script('nz_quizmosaic-plugin', plugins_url('/public/js/plugin.js', __FILE__), deps: ['wp-api', 'backbone'], ver: false, args: ['in_footer' => true]);
         wp_register_style('nz_quizmosaic-plugin', plugins_url('/public/css/plugin.css', __FILE__), deps: [], ver: false, media: 'all');
 
         // Admin assets
-        wp_register_script('nz_quizmosaic-admin', plugins_url('/public/js/admin.js', __FILE__), deps: ['lodash', 'backbone', 'wp-api'], ver: false, in_footer: true);
+        wp_register_script('nz_quizmosaic-admin', plugins_url('/public/js/admin.js', __FILE__), deps: ['lodash', 'backbone', 'wp-api'], ver: false, args: ['in_footer' => true]);
         wp_register_style('nz_quizmosaic-admin', plugins_url('/public/css/admin.css', __FILE__), deps: [], ver: false, media: 'all');
     }
 
