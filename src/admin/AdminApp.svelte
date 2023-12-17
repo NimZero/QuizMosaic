@@ -456,7 +456,7 @@
                         <HelpIcon>
                             <h1>Questions</h1>
                             <p>help</p>
-                            <p>255 chars max pour la question et 100 max pour les réponses</p>
+                            <p>255 chars max pour la question et 255 max pour les réponses</p>
                         </HelpIcon>
                     </div>
                     <div
@@ -495,7 +495,7 @@
                                             <input
                                                 type="text"
                                                 minlength="1"
-                                                maxlength="100"
+                                                maxlength="255"
                                                 data-questId={question.id}
                                                 data-catId={category.id}
                                                 value={question.answers[

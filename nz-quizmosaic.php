@@ -11,7 +11,7 @@
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
  * Description:       Créez des questionnaires interactifs avec catégories de réponses en toute simplicité.
- * Version:           1.4.1
+ * Version:           1.4.2
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Author:            NimZero
@@ -50,12 +50,12 @@ class NZQuizMosaic
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_survey` (`id` int(11) NOT NULL AUTO_INCREMENT,`name` varchar(100) NOT NULL, `style` TEXT NULL,PRIMARY KEY (`id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_question` (`id` int(11) NOT NULL,`survey_id` int(11) NOT NULL,`question` varchar(255) NOT NULL,PRIMARY KEY (`survey_id`,`id`),KEY `IDX_B6F7494EB3FE509D` (`survey_id`),KEY `IDX_DADD4A25B3FE509D` (`id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_category` (`id` int(11) NOT NULL,`survey_id` int(11) NOT NULL,`text` varchar(100) NOT NULL,PRIMARY KEY (`survey_id`,`id`),KEY `IDX_64C19C1B3FE509D` (`survey_id`),KEY `IDX_DADD4A2512469DE2` (`id`)) %s;', $wpdb->prefix, $charset_collate));
-            dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_answer` (`survey_id` int(11) NOT NULL,`question_id` int(11) NOT NULL,`category_id` int(11) NOT NULL,`text` varchar(100) NOT NULL,PRIMARY KEY (`survey_id`,`question_id`,`category_id`),KEY `IDX_75EA56E0FB7336F0` (`question_id`),KEY `IDX_75EA56E0E3BD61CE` (`category_id`)) %s;', $wpdb->prefix, $charset_collate));
+            dbDelta(sprintf('CREATE TABLE `%snz_quizmosaic_answer` (`survey_id` int(11) NOT NULL,`question_id` int(11) NOT NULL,`category_id` int(11) NOT NULL,`text` varchar(255) NOT NULL,PRIMARY KEY (`survey_id`,`question_id`,`category_id`),KEY `IDX_75EA56E0FB7336F0` (`question_id`),KEY `IDX_75EA56E0E3BD61CE` (`category_id`)) %s;', $wpdb->prefix, $charset_collate));
             dbDelta(sprintf('ALTER TABLE `%snz_quizmosaic_question` ADD CONSTRAINT `FK_B6F7494EB3FE509D` FOREIGN KEY (`survey_id`) REFERENCES `nz_quizmosaic_survey` (`id`);', $wpdb->prefix));
             dbDelta(sprintf('ALTER TABLE `%snz_quizmosaic_category` ADD CONSTRAINT `FK_64C19C1B3FE509D` FOREIGN KEY (`survey_id`) REFERENCES `nz_quizmosaic_survey` (`id`);', $wpdb->prefix));
             dbDelta(sprintf('ALTER TABLE `%snz_quizmosaic_answer` ADD CONSTRAINT `FK_DADD4A2512469DE2` FOREIGN KEY (`survey_id`) REFERENCES `%snz_quizmosaic_survey` (`id`), ADD CONSTRAINT `FK_DADD4A251E27F6BF` FOREIGN KEY (`question_id`) REFERENCES `%snz_quizmosaic_question` (`id`),ADD CONSTRAINT `FK_DADD4A25B3FE509D` FOREIGN KEY (`category_id`) REFERENCES `%snz_quizmosaic_category` (`id`);', $wpdb->prefix, $wpdb->prefix, $wpdb->prefix, $wpdb->prefix));
 
-            add_option("nz_quizmosaic_db_version", "1.2");
+            add_option("nz_quizmosaic_db_version", "1.3");
         }
     }
 
@@ -67,7 +67,7 @@ class NZQuizMosaic
     {
         $currentVersion = get_option('nz_quizmosaic_db_version');
 
-        if ($currentVersion === '1.2') {
+        if ($currentVersion === '1.3') {
             return;
         }
 
@@ -82,6 +82,16 @@ class NZQuizMosaic
             $wpdb->query("ALTER TABLE $table_name ADD COLUMN style TEXT NULL");
 
             update_option('nz_quizmosaic_db_version', '1.2');
+        }
+
+        if ($currentVersion == '1.2') {
+
+            $table_name = $wpdb->prefix . 'nz_quizmosaic_answer';
+
+            // Exemple de mise à jour : ajouter une colonne à une table existante
+            $wpdb->query("ALTER TABLE $table_name MODIFY `text` varchar(255) NOT NULL");
+
+            update_option('nz_quizmosaic_db_version', '1.3');
         }
     }
 
