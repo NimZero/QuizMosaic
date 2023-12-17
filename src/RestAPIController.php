@@ -442,7 +442,7 @@ class RestAPIController extends WP_REST_Controller
 
             foreach ($question['answers'] as $answer) {
                 $answer['answer'] = trim($answer['answer']);
-                if (strlen($answer['answer']) > 100) {
+                if (strlen($answer['answer']) > 255) {
                     throw new Exception(sprintf("The answer for question id: #%s ands category #%s is too long", $question['id'], $answer['category']), 1);
                 }
             }
