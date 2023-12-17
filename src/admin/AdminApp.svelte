@@ -166,7 +166,7 @@
                         questions = [
                             ...questions,
                             {
-                                id: question["id"],
+                                id: parseInt(question["id"]),
                                 question: question["question"],
                                 answers: ans,
                             },
@@ -201,7 +201,6 @@
         let formatedStyle = Object.keys(colors)
             .map((key) => [key, colors[key]].join(":"))
             .join(";");
-        console.log(formatedStyle);
 
         categories.forEach((element) => {
             answers[element.id] = element.name;
@@ -272,7 +271,7 @@
         if (categories.length == 0) {
             id = 1;
         } else {
-            id = categories.slice(-1)[0].id + 1;
+            id = parseInt(categories.slice(-1)[0].id) + 1;
         }
 
         categories = [
@@ -291,14 +290,14 @@
 
     const handleCategorieChange = (ev) => {
         const index = categories.findIndex(
-            (item) => item.id == ev.target.dataset.catid
+            (item) => item.id == parseInt(ev.target.dataset.catid)
         );
         categories[index].name = ev.target.value;
     };
 
     const handleCategorieDeleteClick = (ev) => {
         const index = categories.findIndex(
-            (item) => item.id == ev.target.dataset.catid
+            (item) => item.id == parseInt(ev.target.dataset.catid)
         );
 
         categories.splice(index, 1);
@@ -326,23 +325,23 @@
 
     const handleQuestionTextChange = (ev) => {
         const index = questions.findIndex(
-            (item) => item.id == ev.target.dataset.questid
+            (item) => item.id == parseInt(ev.target.dataset.questid)
         );
         questions[index].question = ev.target.value;
     };
 
     const handleQuestionAnswerChange = (ev) => {
         var question = questions.find((obj) => {
-            return obj.id == ev.target.dataset.questid;
+            return obj.id == parseInt(ev.target.dataset.questid);
         });
 
-        question.answers[ev.target.dataset.catid] = ev.target.value;
+        question.answers[parseInt(ev.target.dataset.catid)] = ev.target.value;
         questions = questions;
     };
 
     const handleQuestionDeleteClick = (ev) => {
         const index = questions.findIndex(
-            (item) => item.id == ev.target.dataset.questid
+            (item) => item.id == parseInt(ev.target.dataset.questid)
         );
 
         questions.splice(index, 1);
