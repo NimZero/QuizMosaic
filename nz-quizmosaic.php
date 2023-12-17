@@ -11,7 +11,7 @@
  * Plugin Name:       QuizMosaic
  * Plugin URI:        https://github.com/NimZero/QuizMosaic
  * Description:       Créez des questionnaires interactifs avec catégories de réponses en toute simplicité.
- * Version:           1.4.0
+ * Version:           1.4.1
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Author:            NimZero
@@ -189,7 +189,7 @@ class NZQuizMosaic
             catch (\Exception $e) {
                 $wpdb->query( 'ROLLBACK' );
             }
-        
+
             // Redirigez l'utilisateur vers une autre page après la suppression
             wp_safe_redirect(menu_page_url('nz_quizmosaic', false));
             exit();

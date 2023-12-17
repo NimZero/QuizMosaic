@@ -45,7 +45,7 @@
             resultContainer.classList.add("hidden");
         }
 
-        carousel.goToNext();
+        carousel.swiper.slideNext();
 
         let catId = ev.target.dataset.cat;
         let questId = ev.target.dataset.quest;
